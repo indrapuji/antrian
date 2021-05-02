@@ -8,8 +8,12 @@ const socketHandler = (socket: socketio.Socket, io: socketio.Server) => {
     io.emit('pengumuman', data);
   });
 
-  socket.on('login', (data) => {
-    io.emit('login', data);
+  socket.on('running_text', (data) => {
+    io.emit('running_text', data);
+  });
+
+  socket.on('nama_aplikasi', (data) => {
+    io.emit('nama_aplikasi', data);
   });
 };
 export default socketHandler;

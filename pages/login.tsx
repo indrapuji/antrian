@@ -8,7 +8,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
-import { io } from 'socket.io-client';
 
 const Login = () => {
   const router = useRouter();
@@ -39,8 +38,7 @@ const Login = () => {
         cookieCutter.set('token', res.data.token);
         cookieCutter.set('nama', res.data.username);
         cookieCutter.set('role', res.data.role);
-        const socket = io();
-        socket.emit('login', `si ${res.data.username} login.`);
+
         if (res.data.role === 'ADMIN') {
           router.push('/admin');
         } else {

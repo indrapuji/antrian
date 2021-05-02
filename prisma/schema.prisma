@@ -7,20 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Setting {
+  id     Int    @id @default(autoincrement())
+  keys   String @unique
+  values String
+}
+
 model User {
-  id        Int       @id @default(autoincrement())
-  username  String    @unique
-  password  String
-  alias     String
-  role      String
-}
-
-model Aplikasi {
-  id        Int       @id @default(autoincrement())
-  nama_apl  String
-}
-
-model Running {
-  id        Int       @id @default(autoincrement())
-  text      String
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+  alias    String
+  role     String
 }

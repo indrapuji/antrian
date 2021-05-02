@@ -1,14 +1,112 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
+import axios from 'axios';
 import LayoutDashboard from 'components/layout/dashboard';
 import MetaSeo from 'components/MetaSeo';
 import Modal from 'components/Modal';
 import TitleColor from 'components/TitleColor';
+import cookieCutter from 'cookie-cutter';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 
 const Dashboard = () => {
   const [isDelete, setIsDelete] = useState(false);
+  const [editRunning, setEditRunning] = useState('');
+  // const [editLogo, setEditLogo] = useState('');
+  const [EditNama, setEditNama] = useState('');
+  const [updateApp, setUpdateApp] = useState('');
+
+  const token = cookieCutter.get('token');
+
+  useEffect(() => {
+    getData();
+  }, []);
+
+  const getData = () => {
+    axios({
+      method: 'GET',
+      url: '/api/aplikasi',
+    })
+      .then((res) => {
+        const runningBanner = res.data.filter((x: any) => x.keys === 'running');
+        if (runningBanner.length > 0) {
+          setEditRunning(runningBanner[0].values);
+          console.log(runningBanner[0].values);
+        }
+        // const aplikasiLogo = res.data.filter((x: any) => x.keys === 'logo');
+        // if (aplikasiLogo.length > 0) {
+        //   setLogoAplikasi(aplikasiLogo[0].values);
+        // }
+        const aplikasiNama = res.data.filter((x: any) => x.keys === 'nama');
+        if (aplikasiNama.length > 0) {
+          setEditNama(aplikasiNama[0].values);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  const changeName = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditNama(e.target.value);
+  };
+  const changeRunning = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditRunning(e.target.value);
+  };
+
+  const validate = (namaUpdate: any) => {
+    setIsDelete(true);
+    setUpdateApp(namaUpdate);
+  };
+
+  const updateName = () => {
+    axios({
+      method: 'PUT',
+      url: '/api/aplikasi',
+      data: {
+        keys: 'nama',
+        values: EditNama,
+      },
+      headers: { token },
+    })
+      .then((res) => {
+        if (res.status === 200) {
+          const socket = io();
+          socket.emit('nama_aplikasi', EditNama);
+        }
+        console.log(res);
+        getData();
+        setIsDelete(false);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  const updateRunningText = () => {
+    axios({
+      method: 'PUT',
+      url: '/api/aplikasi',
+      data: {
+        keys: 'running',
+        values: editRunning,
+      },
+      headers: { token },
+    })
+      .then((res) => {
+        if (res.status === 200) {
+          const socket = io();
+          socket.emit('running_text', editRunning);
+        }
+        console.log(res);
+        getData();
+        setIsDelete(false);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
   return (
     <>
       <MetaSeo title="Dashboard" description="Admin Dashboard Antrian" />
@@ -56,9 +154,11 @@ const Dashboard = () => {
                   <div className="mt-4 space-y-4">
                     <input
                       type="text"
-                      name="maxqueue"
-                      id="maxqueue"
+                      name="nama"
+                      id="nama"
+                      value={EditNama}
                       className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                      onChange={changeName}
                     />
                   </div>
                 </p>
@@ -67,7 +167,7 @@ const Dashboard = () => {
                 <button
                   type="submit"
                   className="btn btn-success float-right"
-                  onClick={() => setIsDelete(!isDelete)}
+                  onClick={() => validate('nama')}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -91,10 +191,7 @@ const Dashboard = () => {
         </div>
         <div className="card rounded-3xl p-4 mt-3">
           <div className="grid grid-cols-1 sm:grid-cols-8 xl:grid-cols-12 gap-4">
-            <div className="col-span-1 sm:col-span-2 xl:col-span-2">
-              <div className="relative w-40 h-40 sm:w-36 sm:h-36 md:w-28 md:h-28 xl:w-36 xl:h-36 mx-auto" />
-            </div>
-            <div className="col-span-1 sm:col-span-6 xl:col-span-10">
+            <div className="col-span-12">
               <div className="mb-4">
                 <div className="font-bold text-teal-600">
                   Pengumuman teks berjalan
@@ -102,9 +199,11 @@ const Dashboard = () => {
                 <div className="mt-4 space-y-4">
                   <input
                     type="text"
-                    name="maxqueue"
-                    id="maxqueue"
+                    name="runningText"
+                    id="runningText"
+                    value={editRunning}
                     className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                    onChange={changeRunning}
                   />
                 </div>
               </div>
@@ -112,7 +211,7 @@ const Dashboard = () => {
                 <button
                   type="submit"
                   className="btn btn-success float-right"
-                  onClick={() => setIsDelete(!isDelete)}
+                  onClick={() => validate('running')}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -146,8 +245,11 @@ const Dashboard = () => {
         btnProcessTitle="Ya Simpan"
         btnProcessStyle="btn-success"
         btnProcessAction={(e: string) => {
-          // eslint-disable-next-line no-console
-          console.log(e);
+          if (updateApp === 'running') {
+            updateRunningText();
+          } else {
+            updateName();
+          }
         }}
       />
     </>

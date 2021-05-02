@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import axios from 'axios';
 import Footer from 'components/Footer';
 import MetaSeo from 'components/MetaSeo';
 import TitleColor from 'components/TitleColor';
@@ -10,6 +11,37 @@ import { io } from 'socket.io-client';
 const Home = () => {
   const [say, setSay] = useState('null');
   const [now, updateNow] = useState(moment().locale('id'));
+  const [textRunning, setTextRunning] = useState('');
+  const [logoAplikasi, setLogoAplikasi] = useState('');
+  const [namaAplikasi, setNamaAplikasi] = useState('');
+
+  useEffect(() => {
+    getData();
+  }, []);
+
+  const getData = () => {
+    axios({
+      method: 'GET',
+      url: '/api/aplikasi',
+    })
+      .then((res) => {
+        const runningBanner = res.data.filter((x: any) => x.keys === 'running');
+        if (runningBanner.length > 0) {
+          setTextRunning(runningBanner[0].values);
+        }
+        const aplikasiLogo = res.data.filter((x: any) => x.keys === 'logo');
+        if (aplikasiLogo.length > 0) {
+          setLogoAplikasi(aplikasiLogo[0].values);
+        }
+        const aplikasiNama = res.data.filter((x: any) => x.keys === 'nama');
+        if (aplikasiNama.length > 0) {
+          setNamaAplikasi(aplikasiNama[0].values);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
 
   const speak = (text: string, loops?: number) => {
     if (text !== 'null') {
@@ -39,7 +71,7 @@ const Home = () => {
     const socket = io();
 
     socket.on('status', (data) => {
-      setSay(data);
+      // setSay(data);
       console.log(data);
     });
 
@@ -48,9 +80,12 @@ const Home = () => {
       console.log(data);
     });
 
-    socket.on('login', (data) => {
-      setSay(data);
-      console.log(data);
+    socket.on('running_text', (data) => {
+      setTextRunning(data);
+    });
+
+    socket.on('nama_aplikasi', (data) => {
+      setNamaAplikasi(data);
     });
   }, []);
 
@@ -63,7 +98,7 @@ const Home = () => {
             <header className="h-20 flex items-center p-3 shadow bg-white">
               <div className="relative h-8 w-8">
                 <Image
-                  src="/images/logo.svg"
+                  src={`/images/${logoAplikasi}`}
                   alt=""
                   layout="fill"
                   objectFit="cover"
@@ -72,7 +107,7 @@ const Home = () => {
               </div>
 
               <div className="hidden md:flex md:items-center md:ml-4 md:w-auto md:h-full md:text-3xl md:font-bold md:truncate">
-                Klinik Sehat
+                {namaAplikasi}
               </div>
 
               <div className="flex-grow items-center justify-end m-2 font-semibold text-right">
@@ -85,7 +120,7 @@ const Home = () => {
 
             <div
               className="marquee marquee-speed-drowsy h-16 flex items-center p-2 shadow bg-gradient-to-r from-indigo-500 via-blue-500 to-teal-500 text-cool-gray-100 font-bold text-xl text-shadow-sm"
-              data-marquee="Oppo Reno5 Edisi Avengers Bakal Dijual di Indonesia."
+              data-marquee={textRunning}
             />
 
             <div className="grid grid-cols-4 gap-0">

@@ -9,13 +9,12 @@
     "start": "NODE_ENV=production node build/server.js",
     "format": "prettier --write './**/*.{ts,tsx,css,scss,html}'",
     "lint": "eslint --fix . --ext '.ts,.tsx'",
-    "prisma": "prisma",
     "ts-node": "ts-node --compiler-options '{\"module\":\"CommonJS\"}'"
   },
   "author": "dwi.setiyadi@gmail.com",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^2.15.0",
+    "@prisma/client": "2.21.2",
     "@tailwindcss/forms": "^0.2.1",
     "@types/express": "^4.17.11",
     "autoprefixer": "^10.2.4",
@@ -39,7 +38,6 @@
     "tailwindcss": "^2.0.2"
   },
   "devDependencies": {
-    "@prisma/cli": "2.15.0",
     "@types/bcrypt": "^3.0.1",
     "@types/jsonwebtoken": "^8.5.1",
     "@types/node": "^15.0.1",
@@ -67,7 +65,7 @@
     "lint-staged": "^10.5.3",
     "nodemon": "^2.0.7",
     "prettier": "^2.2.1",
-    "prisma": "^2.21.2",
+    "prisma": "2.21.2",
     "rimraf": "^3.0.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.4"
