@@ -1,0 +1,8 @@
+.vscode/*
+node_modules/*
+.eslintrc.js
+public/**/*.js
+build/**/*.js
+components/**/*.css
+tailwind.config.js
+postcss.config.js

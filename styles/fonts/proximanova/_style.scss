@@ -1,0 +1,48 @@
+@font-face {
+  font-family: 'Proxima Nova';
+  src: local('Proxima Nova');
+  src: url(ProximaNova-Light.ttf);
+  src: url(ProximaNova-Light.ttf) format('truetype'),
+    url(ProximaNova-Light.woff) format('woff'),
+    url(ProximaNova-Light.svg#svgFontName) format('svg') format('truetype'),
+    url(ProximaNova-Light.svg#svgFontName) format('svg');
+  font-style: normal;
+  font-weight: 300;
+}
+@font-face {
+  font-family: 'Proxima Nova';
+  src: local('Proxima Nova');
+  src: url(ProximaNova-Regular.ttf);
+  src: url(ProximaNova-Regular.ttf) format('truetype'),
+    url(ProximaNova-Regular.woff) format('woff'),
+    url(ProximaNova-Regular.svg#svgFontName) format('svg') format('truetype'),
+    url(ProximaNova-Regular.svg#svgFontName) format('svg');
+  font-style: normal;
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Proxima Nova';
+  src: local('Proxima Nova');
+  src: url(ProximaNova-Semibold.ttf);
+  src: url(ProximaNova-Semibold.ttf) format('truetype'),
+    url(ProximaNova-Semibold.woff) format('woff'),
+    url(ProximaNova-Semibold.svg#svgFontName) format('svg') format('truetype'),
+    url(ProximaNova-Semibold.svg#svgFontName) format('svg');
+  font-style: normal;
+  font-weight: 600;
+}
+@font-face {
+  font-family: 'Proxima Nova';
+  src: local('Proxima Nova');
+  src: url(ProximaNova-Bold.ttf);
+  src: url(ProximaNova-Bold.ttf) format('truetype'),
+    url(ProximaNova-Bold.woff) format('woff'),
+    url(ProximaNova-Bold.svg#svgFontName) format('svg') format('truetype'),
+    url(ProximaNova-Bold.svg#svgFontName) format('svg');
+  font-style: normal;
+  font-weight: 700;
+}
+
+html {
+  text-rendering: optimizeLegibility;
+}

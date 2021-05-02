@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import 'fonts/proximanova/_style';
+
+@import 'variables';
+@import 'custom';
+
+@import '~html5-marquee/css/marquee.css';
