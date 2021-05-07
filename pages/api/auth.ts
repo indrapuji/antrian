@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 import bcrypt from 'bcrypt';
 import { sign } from 'jsonwebtoken';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -30,11 +31,14 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
       },
       secret
     );
+    // console.log(searchUser);
     return res.status(200).json({
       message: 'login berhasil',
       token,
-      username: searchUser.username,
+      nama: searchUser.nama,
       role: searchUser.role,
+      id: searchUser.id,
+      label: searchUser.label,
     });
   } catch (error) {
     return res.status(401).json({

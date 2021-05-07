@@ -18,4 +18,6 @@ export interface NavbarProps {
   setOpen: any;
   isNavRightMenuUser: boolean;
   setNavRightMenuUser: any;
+  isName: string;
+  isLogo: string;
 }

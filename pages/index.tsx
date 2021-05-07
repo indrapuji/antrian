@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 import axios from 'axios';
 import Footer from 'components/Footer';
 import MetaSeo from 'components/MetaSeo';
@@ -14,9 +15,14 @@ const Home = () => {
   const [textRunning, setTextRunning] = useState('');
   const [logoAplikasi, setLogoAplikasi] = useState('');
   const [namaAplikasi, setNamaAplikasi] = useState('');
+  const [listAntrian, setListAntrian] = useState<any>();
+  const [listOperator, setListOperator] = useState<any>();
+  const [isRow, setIsrow] = useState<any>();
 
   useEffect(() => {
     getData();
+    getUser();
+    getListAntrian();
   }, []);
 
   const getData = () => {
@@ -43,6 +49,21 @@ const Home = () => {
       });
   };
 
+  const getListAntrian = async () => {
+    try {
+      const { data } = await axios({
+        method: 'GET',
+        url: '/api/daftar',
+      });
+      const antrian = data
+        .filter((x: any) => x.antrian === 'waiting')
+        .sort((a: any, b: any) => (a.kode > b.kode ? 1 : -1));
+      setListAntrian(antrian);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const speak = (text: string, loops?: number) => {
     if (text !== 'null') {
       (function speakLoop(i: number) {
@@ -52,7 +73,7 @@ const Home = () => {
           speech.lang = 'id-ID';
           speech.volume = 1;
           speech.rate = 1;
-          speech.pitch = 0.9;
+          speech.pitch = 0;
           window.speechSynthesis.speak(speech);
           setSay('null');
           // eslint-disable-next-line no-plusplus
@@ -71,13 +92,12 @@ const Home = () => {
     const socket = io();
 
     socket.on('status', (data) => {
-      // setSay(data);
-      console.log(data);
+      setSay(data);
     });
 
-    socket.on('pengumuman', (data) => {
-      setSay(data);
-      console.log(data);
+    socket.on('panggilan', (data) => {
+      setSay(`Nomor antrian ${data.kode}, silahkan ke ${data.label}`);
+      getUser();
     });
 
     socket.on('running_text', (data) => {
@@ -87,11 +107,72 @@ const Home = () => {
     socket.on('nama_aplikasi', (data) => {
       setNamaAplikasi(data);
     });
+
+    socket.on('pendaftaran', (data) => {
+      setListAntrian(data);
+    });
+
+    socket.on('operator', (data) => {
+      if (data) {
+        getUser();
+      }
+    });
   }, []);
+
+  const mergeOperatorAntrian = (op: any, antrian: any) =>
+    op.map((opItem: any) => ({
+      ...antrian.find(
+        (antrianItem: any) => antrianItem.operator === opItem.id && antrianItem
+      ),
+      ...opItem,
+    }));
+
+  const getAntrianPanggil = async () => {
+    try {
+      const antrianCounter = await axios({
+        method: 'get',
+        url: '/api/daftar',
+      });
+      const antri = antrianCounter.data
+        .filter((x: any) => x.antrian === 'calling')
+        .sort((a: any, b: any) => (a.operator > b.operator ? 1 : -1));
+      return antri;
+    } catch (error) {
+      // console.log(error);
+      return false;
+    }
+  };
+
+  const getUser = async () => {
+    try {
+      const userList = await axios({
+        method: 'GET',
+        url: '/api/user',
+      });
+      const filterOperator = userList.data
+        .filter((x: any) => x.role !== 'ADMIN')
+        .sort((a: any, b: any) => (a.label > b.label ? 1 : -1));
+
+      const antrianPanggil = await getAntrianPanggil();
+
+      const merged = mergeOperatorAntrian(filterOperator, antrianPanggil);
+      console.log(merged);
+
+      setListOperator(merged);
+      if (merged.length < Number(4)) {
+        setIsrow('2');
+      } else {
+        const count = Math.ceil(merged.length / Number(2));
+        setIsrow(count);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <>
-      <MetaSeo title="Masuk" description="Sistem Antrian" />
+      <MetaSeo title="Screen" description="Sistem Antrian" />
       <div className="flex">
         <main className="flex-grow flex flex-col min-h-screen w-full">
           <div className="h-full">
@@ -125,19 +206,37 @@ const Home = () => {
 
             <div className="grid grid-cols-4 gap-0">
               <div className="col-span-4 md:col-span-3 p-4 pr-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="card rounded-3xl">
+                <div className={`grid grid-cols-1 md:grid-cols-${isRow} gap-6`}>
+                  {listOperator &&
+                    listOperator.map((item: any) => {
+                      return (
+                        <div key={item.id} className="card rounded-3xl">
+                          <div className="rounded-t-3xl bg-danger p-6 text-white text-center text-shadow-sm">
+                            <div className="text-3xl font-bold">
+                              {item.label}
+                            </div>
+                          </div>
+                          <div className="p-6 pb-0 text-center">
+                            <div className="p-0 m-0 text-lg font-bold">
+                              Nomor Antrian
+                            </div>
+                            <TitleColor
+                              className="text-9xl font-bold m-0 p-0 ml-1"
+                              color="bg-dark"
+                            >
+                              {item.kode !== undefined ? item.kode : '--'}
+                            </TitleColor>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {/* <div className="card rounded-3xl">
                     <div className="rounded-t-3xl bg-danger p-6 text-white text-center text-shadow-sm">
                       <div className="text-3xl font-bold">Operator 1</div>
                     </div>
                     <div className="p-6 pb-0 text-center">
-                      <div className="p-0 m-0 text-lg font-bold">
-                        Nomor Antrian
-                      </div>
-                      <TitleColor
-                        className="text-9xl font-bold m-0 p-0 ml-1"
-                        color="bg-dark"
-                      >
+                      <div className="p-0 m-0 text-lg font-bold">Nomor Antrian</div>
+                      <TitleColor className="text-9xl font-bold m-0 p-0 ml-1" color="bg-dark">
                         17
                       </TitleColor>
                     </div>
@@ -147,13 +246,8 @@ const Home = () => {
                       <div className="text-3xl font-bold">Operator 2</div>
                     </div>
                     <div className="p-6 text-center">
-                      <div className="p-0 m-0 text-lg font-bold">
-                        Nomor Antrian
-                      </div>
-                      <TitleColor
-                        className="text-9xl font-bold m-0 p-0 ml-1"
-                        color="bg-dark"
-                      >
+                      <div className="p-0 m-0 text-lg font-bold">Nomor Antrian</div>
+                      <TitleColor className="text-9xl font-bold m-0 p-0 ml-1" color="bg-dark">
                         19
                       </TitleColor>
                     </div>
@@ -163,13 +257,8 @@ const Home = () => {
                       <div className="text-3xl font-bold">Operator 3</div>
                     </div>
                     <div className="p-6 text-center">
-                      <div className="p-0 m-0 text-lg font-bold">
-                        Nomor Antrian
-                      </div>
-                      <TitleColor
-                        className="text-9xl font-bold m-0 p-0 ml-1"
-                        color="bg-dark"
-                      >
+                      <div className="p-0 m-0 text-lg font-bold">Nomor Antrian</div>
+                      <TitleColor className="text-9xl font-bold m-0 p-0 ml-1" color="bg-dark">
                         20
                       </TitleColor>
                     </div>
@@ -179,17 +268,12 @@ const Home = () => {
                       <div className="text-3xl font-bold">Operator 4</div>
                     </div>
                     <div className="p-6 text-center">
-                      <div className="p-0 m-0 text-lg font-bold">
-                        Nomor Antrian
-                      </div>
-                      <TitleColor
-                        className="text-9xl font-bold m-0 p-0 ml-1"
-                        color="bg-dark"
-                      >
+                      <div className="p-0 m-0 text-lg font-bold">Nomor Antrian</div>
+                      <TitleColor className="text-9xl font-bold m-0 p-0 ml-1" color="bg-dark">
                         21
                       </TitleColor>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
               <div className="col-span-4 md:col-span-1 p-4 pl-3">
@@ -198,30 +282,31 @@ const Home = () => {
                     <div className="text-3xl font-bold">Selanjutnya</div>
                   </div>
                   <div className="p-5">
-                    <div className="p-3 text-center text-xl font-bold">
-                      Nomor Antrian 22
-                    </div>
-                    <div className="p-3 text-center text-xl font-bold">
-                      Nomor Antrian 23
-                    </div>
-                    <div className="p-3 text-center text-xl font-bold">
-                      Nomor Antrian 24
-                    </div>
-                    <div className="p-3 text-center text-xl font-bold">
-                      Nomor Antrian 25
-                    </div>
-                    <div className="p-3 text-center text-xl font-bold">
-                      Nomor Antrian 26
-                    </div>
-                    <div className="p-3 text-center text-xl font-bold">
-                      Nomor Antrian 27
-                    </div>
-                    <div className="p-3 text-center text-xl font-bold">
-                      Nomor Antrian 28
-                    </div>
-                    <div className="p-3 text-center text-xl font-bold">
-                      Nomor Antrian 29
-                    </div>
+                    {listAntrian &&
+                      listAntrian.slice(0, 8).map((item: any) => {
+                        return (
+                          <div className="p-3 text-center text-xl font-bold">
+                            Nomor Antrian {item.kode}
+                          </div>
+                        );
+                      })}
+                    {listAntrian &&
+                      listAntrian.length < 8 &&
+                      [...Array(8 - listAntrian.length)].map((_, i) => {
+                        return (
+                          <div className="p-3 text-center text-xl font-bold">
+                            -
+                          </div>
+                        );
+                      })}
+                    {/* <div className="p-3 text-center text-xl font-bold">Nomor Antrian 22</div>
+                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 23</div>
+                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 24</div>
+                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 25</div>
+                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 26</div>
+                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 27</div>
+                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 28</div>
+                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 29</div> */}
                     <div className="flex p-3 text-center text-xl font-bold">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"

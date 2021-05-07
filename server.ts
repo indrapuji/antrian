@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 import express, { Express, Request, Response } from 'express';
 import * as http from 'http';
 import next, { NextApiHandler } from 'next';

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 
 import { NextApiRequest, NextApiResponse } from 'next';
 import checktoken from 'utils/checktoken';
@@ -7,7 +8,6 @@ import prisma from 'utils/prisma';
 const getAllData = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     const allData = await prisma.setting.findMany();
-    console.log(prisma);
     return res.status(200).json(allData);
   } catch (error) {
     return res.status(401).json({

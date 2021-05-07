@@ -1,14 +1,97 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
+import axios from 'axios';
 import LayoutDashboard from 'components/layout/dashboard';
 import MetaSeo from 'components/MetaSeo';
 import TitleColor from 'components/TitleColor';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
 const Dashboard = () => {
+  const [textRunning, setTextRunning] = useState('');
+  const [logoAplikasi, setLogoAplikasi] = useState('');
+  const [namaAplikasi, setNamaAplikasi] = useState('');
+  const [countOperator, setCountOperator] = useState(0);
+  const [maxAntrian, setMaxAntrian] = useState(0);
+
+  useEffect(() => {
+    getData();
+    countUser();
+    getList();
+  }, []);
+
+  const getList = () => {
+    axios({
+      method: 'get',
+      url: '/api/daftar',
+    })
+      .then((res) => {
+        if (res.data.length > 0) {
+          setMaxAntrian(res.data.length);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  const socket = io();
+
+  socket.on('running_text', (data) => {
+    setTextRunning(data);
+  });
+
+  socket.on('nama_aplikasi', (data) => {
+    setNamaAplikasi(data);
+  });
+
+  socket.on('max_antrian', (data) => {
+    setMaxAntrian(data);
+  });
+
+  const getData = () => {
+    axios({
+      method: 'GET',
+      url: '/api/aplikasi',
+    })
+      .then((res) => {
+        const runningBanner = res.data.filter((x: any) => x.keys === 'running');
+        if (runningBanner.length > 0) {
+          setTextRunning(runningBanner[0].values);
+        }
+        const aplikasiLogo = res.data.filter((x: any) => x.keys === 'logo');
+        if (aplikasiLogo.length > 0) {
+          setLogoAplikasi(aplikasiLogo[0].values);
+        }
+        const aplikasiNama = res.data.filter((x: any) => x.keys === 'nama');
+        if (aplikasiNama.length > 0) {
+          setNamaAplikasi(aplikasiNama[0].values);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  const countUser = () => {
+    axios({
+      method: 'GET',
+      url: '/api/user',
+    })
+      .then((res) => {
+        const operatorCount = res.data.filter(
+          (x: any) => x.role === 'OPERATOR'
+        );
+        setCountOperator(operatorCount.length);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
   return (
     <>
       <MetaSeo title="Dashboard" description="Admin Dashboard Antrian" />
@@ -37,7 +120,6 @@ const Dashboard = () => {
           <button
             onClick={(e) => {
               e.preventDefault();
-              const socket = io();
               const ngomong = 'Antrian 105.';
               socket.emit('pengumuman', ngomong);
             }}
@@ -58,7 +140,7 @@ const Dashboard = () => {
                       Operator
                     </h5>
                     <TitleColor className="text-2xl" color="bg-secondary">
-                      4 orang
+                      {`${countOperator} orang`}
                     </TitleColor>
                   </div>
                   <div className="relative w-auto pl-4 flex-initial">
@@ -120,7 +202,7 @@ const Dashboard = () => {
                       Batas Antrian
                     </h5>
                     <TitleColor className="text-2xl" color="bg-warning">
-                      40 nomor
+                      {`${maxAntrian} nomor`}
                     </TitleColor>
                   </div>
                   <div className="relative w-auto pl-4 flex-initial">
@@ -184,7 +266,7 @@ const Dashboard = () => {
                       Status Antrian
                     </h5>
                     <TitleColor className="text-2xl" color="bg-danger">
-                      Dibuka
+                      {maxAntrian > 0 ? 'Dibuka' : 'Ditutup'}
                     </TitleColor>
                   </div>
                   <div className="relative w-auto pl-4 flex-initial">
@@ -248,7 +330,7 @@ const Dashboard = () => {
             <div className="col-span-1 sm:col-span-2 xl:col-span-2">
               <div className="relative w-40 h-40 sm:w-36 sm:h-36 md:w-28 md:h-28 xl:w-36 xl:h-36 mx-auto">
                 <Image
-                  src="/images/logo.svg"
+                  src={`/images/${logoAplikasi}`}
                   alt=""
                   layout="fill"
                   objectFit="cover"
@@ -260,7 +342,7 @@ const Dashboard = () => {
                 <div className="font-bold text-teal-600">Nama Aplikasi</div>
                 <p className="m-0 p-0">
                   <TitleColor className="text-xl" color="bg-dark">
-                    Klinik Sehat
+                    {namaAplikasi}
                   </TitleColor>
                 </p>
               </div>
@@ -268,9 +350,7 @@ const Dashboard = () => {
                 <div className="font-bold text-teal-600">
                   Pengumuman teks berjalan
                 </div>
-                <p className="m-0 p-0">
-                  Oppo Reno5 Edisi Avengers Bakal Dijual di Indonesia.
-                </p>
+                <p className="m-0 p-0">{textRunning}</p>
               </div>
               <Link href="/admin/pengaturan">
                 <button

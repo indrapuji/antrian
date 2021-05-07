@@ -7,7 +7,6 @@ import axios from 'axios';
 import LayoutDashboard from 'components/layout/dashboard';
 import MetaSeo from 'components/MetaSeo';
 import TitleColor from 'components/TitleColor';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 
@@ -15,23 +14,17 @@ const TambahUser = () => {
   const router = useRouter();
   const [formData, setFormData] = useState({
     username: '',
-    alias: '',
+    nama: '',
     role: '',
     password: '',
+    label: '',
   });
   const [repeat, setRepeat] = useState('');
   const [wrong, setWrong] = useState(false);
   const [message, setMessage] = useState('');
-  const [showAlias, setShowAlias] = useState(false);
 
   const onFormChange = (e: any) => {
     const { value, name } = e.target;
-    if (name === 'role' && value === 'OPERATOR') {
-      setShowAlias(true);
-    }
-    if (name === 'role' && value === 'ADMIN') {
-      setShowAlias(false);
-    }
     setFormData({
       ...formData,
       [name]: value,
@@ -43,11 +36,8 @@ const TambahUser = () => {
   };
   const onFormSubmit = (e: any) => {
     e.preventDefault();
-    const { username, role, alias } = formData;
-    if (formData.role === 'ADMIN') {
-      setFormData({ ...formData, alias: 'Administrator' });
-    }
-    if (username === '' || role === '') {
+    const { username, role, nama, label } = formData;
+    if (username === '' || role === '' || nama === '' || label === '') {
       setMessage('Isi semua field');
       setWrong(true);
       setTimeout(() => {
@@ -76,6 +66,10 @@ const TambahUser = () => {
           console.log(err);
         });
     }
+  };
+
+  const handleBack = () => {
+    router.push('/admin/user');
   };
   return (
     <>
@@ -112,6 +106,9 @@ const TambahUser = () => {
                     <div className="shadow overflow-hidden sm:rounded-md">
                       <div className="px-4 py-5 bg-white sm:p-6">
                         <div className="grid-cols-6 gap-6">
+                          {wrong && (
+                            <p className="text-red-600 font-bold">{message}</p>
+                          )}
                           <div className="col-span-6 sm:col-span-3">
                             <label htmlFor="username" className="block">
                               Username
@@ -120,6 +117,19 @@ const TambahUser = () => {
                               type="text"
                               name="username"
                               id="username"
+                              autoComplete="given-name"
+                              className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm border-gray-300 rounded-md"
+                              onChange={onFormChange}
+                            />
+                          </div>
+                          <div className="col-span-6 sm:col-span-3">
+                            <label htmlFor="nama" className="block">
+                              Nama
+                            </label>
+                            <input
+                              type="text"
+                              name="nama"
+                              id="nama"
                               autoComplete="given-name"
                               className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm border-gray-300 rounded-md"
                               onChange={onFormChange}
@@ -143,26 +153,19 @@ const TambahUser = () => {
                             </select>
                           </div>
 
-                          {showAlias && (
-                            <div className="col-span-6 sm:col-span-3">
-                              <label htmlFor="alias" className="block">
-                                Alias
-                              </label>
-                              <select
-                                id="alias"
-                                name="alias"
-                                autoComplete="alias"
-                                className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                onChange={onFormChange}
-                              >
-                                <option value="0">Silahkan Pilih</option>
-                                <option value="Operator1">Operator 1</option>
-                                <option value="Operator2">Operator 2</option>
-                                <option value="Operator3">Operator 3</option>
-                                <option value="Operator4">Operator 4</option>
-                              </select>
-                            </div>
-                          )}
+                          <div className="col-span-6 sm:col-span-3">
+                            <label htmlFor="label" className="block">
+                              Label
+                            </label>
+                            <input
+                              type="text"
+                              name="label"
+                              id="label"
+                              placeholder="Operator 1 / Konsultan 1 / Counter 1 etc...."
+                              className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm border-gray-300 rounded-md"
+                              onChange={onFormChange}
+                            />
+                          </div>
 
                           <div className="col-span-6 sm:col-span-4 m-0 p-0" />
 
@@ -174,6 +177,7 @@ const TambahUser = () => {
                               type="password"
                               name="password"
                               id="password"
+                              required
                               className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm border-gray-300 rounded-md"
                               onChange={onFormChange}
                             />
@@ -192,35 +196,29 @@ const TambahUser = () => {
                             />
                           </div>
                         </div>
-                        {wrong && (
-                          <p className="text-center text-red-600 font-bold">
-                            {message}
-                          </p>
-                        )}
                       </div>
                       <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                        <Link href="/admin/user">
-                          <button
-                            type="button"
-                            className="btn btn-warning mr-4"
+                        <button
+                          type="button"
+                          className="btn btn-warning mr-4"
+                          onClick={() => handleBack()}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            className="w-5 h-5 -mt-1 inline-flex"
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              className="w-5 h-5 -mt-1 inline-flex"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M15 19l-7-7 7-7"
-                              />
-                            </svg>
-                            Batal
-                          </button>
-                        </Link>
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M15 19l-7-7 7-7"
+                            />
+                          </svg>
+                          Batal
+                        </button>
                         <button
                           type="submit"
                           className="btn btn-primary"

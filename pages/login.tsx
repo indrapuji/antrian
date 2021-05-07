@@ -1,5 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable jsx-a11y/label-has-associated-control */
+/* eslint-disable react-hooks/exhaustive-deps */
 
 import axios from 'axios';
 import MetaSeo from 'components/MetaSeo';
@@ -7,7 +8,7 @@ import cookieCutter from 'cookie-cutter';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const Login = () => {
   const router = useRouter();
@@ -23,7 +24,19 @@ const Login = () => {
     setPassword(e.target.value);
   };
 
-  const handleLogin = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+  useEffect(() => {
+    const token = cookieCutter.get('token');
+    const role = cookieCutter.get('role');
+    if (token) {
+      if (role === 'ADMIN') {
+        router.push('/admin');
+      } else {
+        router.push(`/operator`);
+      }
+    }
+  }, []);
+
+  const onFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     axios({
       method: 'POST',
@@ -36,13 +49,14 @@ const Login = () => {
       .then((res) => {
         setIsError(false);
         cookieCutter.set('token', res.data.token);
-        cookieCutter.set('nama', res.data.username);
+        cookieCutter.set('nama', res.data.nama);
         cookieCutter.set('role', res.data.role);
-
         if (res.data.role === 'ADMIN') {
           router.push('/admin');
         } else {
-          router.push('/operator');
+          cookieCutter.set('label', res.data.label);
+          cookieCutter.set('id', res.data.id);
+          router.push(`/operator`);
         }
       })
       .catch((err) => {
@@ -75,55 +89,52 @@ const Login = () => {
         <div className="p-5 mx-auto static xs:p-0 md:p-10 lg:max-w-lg lg:fixed lg:z-30 lg:right-0 lg:mr-16">
           <div className="bg-white dark:bg-cool-gray-800 text-cool-gray-600 dark:text-cool-gray-400 shadow w-full rounded-xl divide-y divide-cool-gray-200 dark:divide-cool-gray-900 md:shadow-xl">
             <div className="p-5 md:p-8">
-              <p className="text-xl font-bold mt-0 pt-0">
-                Selamat datang kembali
-              </p>
-              <p className="">
-                Masuk dengan akun Anda, sebagai administrator atau operator.
-              </p>
-              {isError && (
-                <p className="mb-2 text-red-600 font-semibold">
-                  {messageError}
+              <form action="" method="post" onSubmit={(e) => onFormSubmit(e)}>
+                <p className="text-xl font-bold mt-0 pt-0">
+                  Selamat datang kembali
                 </p>
-              )}
-              <div className="rounded-lg shadow -space-y-px mb-4">
-                <div>
-                  <label htmlFor="email-address" className="sr-only">
-                    Username
-                  </label>
-                  <input
-                    id="email-address"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-lg focus:outline-none focus:ring-indigo-500 focus:border-light-blue-500 focus:z-10 sm:text-sm"
-                    placeholder="Username"
-                    onChange={inputUsername}
-                  />
+                <p className="">
+                  Masuk dengan akun Anda, sebagai administrator atau operator.
+                </p>
+                {isError && (
+                  <p className="mb-2 text-red-600 font-semibold">
+                    {messageError}
+                  </p>
+                )}
+                <div className="rounded-lg shadow -space-y-px mb-4">
+                  <div>
+                    <label htmlFor="username" className="sr-only">
+                      Username
+                    </label>
+                    <input
+                      id="username"
+                      name="username"
+                      type="username"
+                      autoComplete="username"
+                      required
+                      className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-lg focus:outline-none focus:ring-indigo-500 focus:border-light-blue-500 focus:z-10 sm:text-sm"
+                      placeholder="Username"
+                      onChange={inputUsername}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="password" className="sr-only">
+                      Kata sandi
+                    </label>
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      autoComplete="current-password"
+                      required
+                      className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-lg focus:outline-none focus:ring-indigo-500 focus:border-light-blue-500 focus:z-10 sm:text-sm"
+                      placeholder="Kata sandi"
+                      onChange={inputPassword}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="password" className="sr-only">
-                    Kata sandi
-                  </label>
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-lg focus:outline-none focus:ring-indigo-500 focus:border-light-blue-500 focus:z-10 sm:text-sm"
-                    placeholder="Kata sandi"
-                    onChange={inputPassword}
-                  />
-                </div>
-              </div>
-              <Link href="/admin">
-                <button
-                  type="submit"
-                  className="btn btn-primary w-full"
-                  onClick={(e) => handleLogin(e)}
-                >
+
+                <button type="submit" className="btn btn-primary w-full">
                   <span className="inline-block mr-2">Masuk</span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -140,7 +151,7 @@ const Login = () => {
                     />
                   </svg>
                 </button>
-              </Link>
+              </form>
             </div>
             <div className="px-2 py-5 text-center md:px-3 md:py-6 bg-cool-gray-50 rounded-b-xl">
               <Link href="/">

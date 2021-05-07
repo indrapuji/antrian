@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable no-console */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
+/* eslint-disable jsx-a11y/no-static-element-interactions */
 import axios from 'axios';
 import LayoutDashboard from 'components/layout/dashboard';
 import MetaSeo from 'components/MetaSeo';
@@ -9,9 +11,12 @@ import Modal from 'components/Modal';
 import TitleColor from 'components/TitleColor';
 // import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 
 const User = () => {
+  const router = useRouter();
   const [isDelete, setIsDelete] = useState(false);
   const [listUser, setListUser] = useState([]);
   const [userData, setUserData] = useState({
@@ -29,7 +34,14 @@ const User = () => {
       url: '/api/user',
     })
       .then((res) => {
-        setListUser(res.data);
+        const userList = res.data.sort((a: any, b: any) =>
+          a.label > b.label ? 1 : -1
+        );
+        setListUser(userList);
+        const filterOperator = res.data.filter((x: any) => x.role !== 'ADMIN');
+        const socket = io();
+        socket.emit('operator', filterOperator);
+        console.log(filterOperator);
       })
       .catch((err) => {
         console.log(err);
@@ -39,6 +51,10 @@ const User = () => {
   const handleValidate = (userId: any, nameUser: any) => {
     setUserData({ id: userId, username: nameUser });
     setIsDelete(true);
+  };
+
+  const handleEdit = (userId: any) => {
+    router.push(`/admin/user/${userId}`);
   };
 
   const handleDelete = () => {
@@ -52,7 +68,7 @@ const User = () => {
       .then((res) => {
         setIsDelete(false);
         getUser();
-        console.log('User deleted');
+        // console.log('User deleted');
       })
       .catch((err) => {
         console.log(err);
@@ -127,10 +143,19 @@ const User = () => {
                         scope="col"
                         className="px-6 py-3 text-center text-sm font-semibold uppercase tracking-wider"
                       >
-                        Alias
+                        Nama
                       </th>
-                      <th scope="col" className="relative px-6 py-3">
-                        <span className="sr-only">Edit</span>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-center text-sm font-semibold uppercase tracking-wider"
+                      >
+                        Label
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-center text-sm font-semibold uppercase tracking-wider"
+                      >
+                        {/* <span className="sr-only">Edit</span> */}
                       </th>
                     </tr>
                   </thead>
@@ -146,29 +171,33 @@ const User = () => {
                               {item.role}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
-                              {item.alias}
+                              {item.nama}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              {item.label}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right">
-                              {/* <Link href="/admin/user/ubah">
-                                <a className="text-indigo-600 hover:text-indigo-900 font-semibold">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    className="w-5 h-5 -mt-1 mr-1 inline-flex"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth="2"
-                                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                                    />
-                                  </svg>
-                                  Ubah
-                                </a>
-                              </Link>
-                              <span className="mx-4">|</span> */}
+                              <a
+                                className="text-indigo-600 hover:text-indigo-900 font-semibold cursor-pointer"
+                                onClick={() => handleEdit(item.id)}
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                  className="w-5 h-5 -mt-1 mr-1 inline-flex"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                                  />
+                                </svg>
+                                Ubah
+                              </a>
+                              <span className="mx-4">|</span>
                               <a
                                 href="#"
                                 className="text-rose-600 hover:text-rose-900 font-semibold"

@@ -1,4 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 import axios from 'axios';
 import LayoutDashboard from 'components/layout/dashboard';
 import MetaSeo from 'components/MetaSeo';
@@ -16,10 +18,10 @@ const Dashboard = () => {
   // const [editLogo, setEditLogo] = useState('');
   const [EditNama, setEditNama] = useState('');
   const [updateApp, setUpdateApp] = useState('');
-
-  const token = cookieCutter.get('token');
+  const [token, setToken] = useState('');
 
   useEffect(() => {
+    setToken(cookieCutter.get('token'));
     getData();
   }, []);
 

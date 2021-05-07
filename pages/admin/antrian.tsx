@@ -2,16 +2,108 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/anchor-is-valid */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-plusplus */
+/* eslint-disable no-console */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import axios from 'axios';
 import LayoutDashboard from 'components/layout/dashboard';
 import MetaSeo from 'components/MetaSeo';
 import TitleColor from 'components/TitleColor';
-// import Image from 'next/image';
-// import Link from 'next/link';
-import React from 'react';
+import moment from 'moment';
+import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 
 const Antrian = () => {
-  // const [toggleActive, setToggleActive] = useState(false);
-  // console.log(toggleActive);
+  const router = useRouter();
+  const [max, setMax] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [status, setStatus] = useState(false);
+  const [listAntrian, setListAntrian] = useState<any>();
+  const [maxData, setMaxData] = useState(0);
+
+  const socket = io();
+
+  useEffect(() => {
+    getList();
+    socket.on('list_antrian', (data) => {
+      setListAntrian(data);
+    });
+  }, []);
+
+  const getList = async () => {
+    try {
+      const getListAntrian = await axios({
+        method: 'get',
+        url: '/api/daftar',
+      });
+      const maximum = getListAntrian.data.length;
+      setMaxData(maximum);
+      const antri = getListAntrian.data
+        .filter((x: any) => x.nomor !== 0)
+        .sort((a: any, b: any) => (a.nomor > b.nomor ? 1 : -1));
+      setListAntrian(antri);
+      const max_antri = await axios({
+        method: 'get',
+        url: '/api/daftar',
+      });
+      if (max_antri.data.length > 0) {
+        setStatus(true);
+      }
+      socket.emit('max_antrian', max_antri.data.length);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const onFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMax(e.target.value);
+  };
+
+  const handleMax = (e: any) => {
+    e.preventDefault();
+    const d = new Date();
+    const date = d.getDate();
+    const month = d.getMonth() + 1;
+    const year = d.getFullYear();
+    let dateNow = '';
+    let monthNow = '';
+    if (date.toString().length < 2) {
+      dateNow = `0${date.toString()}`;
+    }
+    if (month.toString().length < 2) {
+      monthNow = `0${month.toString()}`;
+    }
+    const nowDate = `${year}-${dateNow}-${monthNow}`;
+    const data = {
+      operator: 0,
+      nomor: 0,
+      kode: '',
+      time: nowDate,
+      nopol: '',
+      jarak: '',
+      stat_book: '',
+      member: '',
+      antrian: 'created',
+    };
+    const prom: any = [];
+    const promises = [];
+    for (let i = 0; i < Number(max); i++) {
+      promises.push(
+        axios.post('/api/antri', data).then((response) => {
+          prom.push(response);
+        })
+      );
+    }
+    Promise.all(promises).then(() => {
+      setSuccess(true);
+      socket.emit('max_antrian', max);
+      router.push('/admin');
+    });
+  };
 
   return (
     <>
@@ -39,7 +131,7 @@ const Antrian = () => {
           <div className="flex flex-grow items-center justify-end">&nbsp;</div>
         </div>
 
-        <div className="card rounded-3xl mb-6">
+        {/* <div className="card rounded-3xl mb-6">
           <div className="px-4 py-5 bg-white rounded-t-3xl sm:p-6">
             <div className="font-bold mb-4">Status Sistem Antrian</div>
             <div className="mt-4 space-y-4">
@@ -92,7 +184,7 @@ const Antrian = () => {
               Simpan
             </button>
           </div>
-        </div>
+        </div> */}
 
         <div className="card rounded-3xl mb-6">
           <div className="px-4 py-5 bg-white rounded-t-3xl sm:p-6">
@@ -105,11 +197,25 @@ const Antrian = () => {
                 name="maxqueue"
                 id="maxqueue"
                 className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                onChange={onFormChange}
               />
             </div>
+            {success && (
+              <p className="text-right text-green-500">
+                Sukses membuat antrian
+              </p>
+            )}
+            {status && (
+              <p className="text-right text-green-500">{`Jumlah antrian yang sudah dibuat ${maxData}`}</p>
+            )}
           </div>
           <div className="px-4 py-3 bg-gray-50 text-right rounded-b-3xl sm:px-6">
-            <button type="submit" className="btn btn-primary">
+            <button
+              type="submit"
+              className={status ? 'btn grey' : 'btn btn-primary'}
+              disabled={status}
+              onClick={handleMax}
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -124,12 +230,83 @@ const Antrian = () => {
                   d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
                 />
               </svg>
-              Simpan
+              {status ? 'disabled' : 'Simpan'}
             </button>
           </div>
         </div>
 
-        <div className="card rounded-3xl">
+        <div className="flex flex-col">
+          <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+              <div className="overflow-hidden card rounded-2xl">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wider"
+                      >
+                        No Antrian
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wider"
+                      >
+                        No Polisi
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wider"
+                      >
+                        Jarak tempuh (KM)
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wider"
+                      >
+                        Booking / Belum
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wider"
+                      >
+                        Member
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {listAntrian &&
+                      listAntrian.map((item: any) => {
+                        return (
+                          <tr key={item.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {item.kode}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {item.nopol}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {item.jarak}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {item.stat_book}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {item.member}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+
+                {/* <Paging /> */}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* <div className="card rounded-3xl">
           <div className="px-4 py-5 bg-white rounded-t-3xl sm:p-6">
             <label htmlFor="resetqueue" className="block font-bold mb-4">
               Start / Reset Antrian
@@ -160,7 +337,7 @@ const Antrian = () => {
               Simpan
             </button>
           </div>
-        </div>
+        </div> */}
       </LayoutDashboard>
     </>
   );

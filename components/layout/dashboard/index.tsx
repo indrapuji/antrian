@@ -1,6 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable jsx-a11y/anchor-is-valid */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 // import animationConfig from 'components/layout/dashboard/data/animation.json';
+import axios from 'axios';
 import Footer from 'components/Footer';
 import Navbar from 'components/layout/dashboard/Navbar';
 // import NotificationBar from 'components/layout/dashboard/NotificationBar';
@@ -8,6 +11,7 @@ import Sidebar from 'components/layout/dashboard/Sidebar';
 import cookieCutter from 'cookie-cutter';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 import useBreakpoint from 'utils/useBreakpoint';
 
 interface LayoutProps {
@@ -20,6 +24,8 @@ const Dashboard = ({ children }: LayoutProps) => {
   const [isNavRightMenuUser, setNavRightMenuUser] = useState(false);
   const [nama, setNama] = useState('');
   const [role, setRole] = useState('');
+  const [namaAplikasi, setNamaAplikasi] = useState('');
+  const [logoAplikasi, setLogoAplikasi] = useState('');
 
   const breakpoint = useBreakpoint('md');
 
@@ -27,10 +33,20 @@ const Dashboard = ({ children }: LayoutProps) => {
   useEffect(() => {
     setNama(cookieCutter.get('nama'));
     setRole(cookieCutter.get('role'));
+    getData();
     if (!cookieCutter.get('token')) {
       router.push('/login');
     }
   }, []);
+
+  const socket = io();
+  socket.on('nama_aplikasi', (data) => {
+    setNamaAplikasi(data);
+  });
+
+  socket.on('logo_aplikasi', (data) => {
+    setLogoAplikasi(data);
+  });
 
   useEffect(() => {
     if (breakpoint) {
@@ -47,6 +63,28 @@ const Dashboard = ({ children }: LayoutProps) => {
       setOpen(false);
     }
   }, [isDesktop]);
+
+  const getData = () => {
+    axios({
+      method: 'GET',
+      url: '/api/aplikasi',
+    })
+      .then((res) => {
+        const aplikasiLogo = res.data.filter((x: any) => x.keys === 'logo');
+        if (aplikasiLogo.length > 0) {
+          setLogoAplikasi(aplikasiLogo[0].values);
+          socket.emit('logo_aplikasi', aplikasiLogo[0].values);
+        }
+        const aplikasiNama = res.data.filter((x: any) => x.keys === 'nama');
+        if (aplikasiNama.length > 0) {
+          setNamaAplikasi(aplikasiNama[0].values);
+          socket.emit('nama_aplikasi', aplikasiNama[0].values);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
 
   return (
     <>
@@ -65,6 +103,8 @@ const Dashboard = ({ children }: LayoutProps) => {
             setOpen={setOpen}
             isNavRightMenuUser={isNavRightMenuUser}
             setNavRightMenuUser={setNavRightMenuUser}
+            isName={namaAplikasi}
+            isLogo={logoAplikasi}
           />
 
           {/*

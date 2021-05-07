@@ -1,5 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-console */
 import Link from 'components/ActiveLink';
 import FocusTrap from 'components/layout/dashboard/utils/FocusTrap';
 import {

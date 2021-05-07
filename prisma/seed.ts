@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
@@ -6,9 +8,10 @@ const prisma = new PrismaClient();
 const salt = bcrypt.genSaltSync(10);
 const userData = {
   username: `admin`,
-  alias: 'Administrator',
+  nama: 'Administrator',
   password: bcrypt.hashSync(process.env.PASSWORD_ADMIN, salt),
   role: 'ADMIN',
+  label: 'Administrator',
 };
 
 const aplikasiNama = {
