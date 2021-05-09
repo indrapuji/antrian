@@ -39,5 +39,13 @@ const socketHandler = (socket: socketio.Socket, io: socketio.Server) => {
   socket.on('operator', (data) => {
     io.emit('operator', data);
   });
+
+  socket.on('count', (data) => {
+    io.emit('count', data);
+  });
+
+  socket.on('status_antrian', (data) => {
+    io.emit('status_antrian', data);
+  });
 };
 export default socketHandler;

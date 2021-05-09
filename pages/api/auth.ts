@@ -31,7 +31,6 @@ const handlePost = async (req: NextApiRequest, res: NextApiResponse) => {
       },
       secret
     );
-    // console.log(searchUser);
     return res.status(200).json({
       message: 'login berhasil',
       token,

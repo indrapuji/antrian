@@ -3,13 +3,13 @@
 /* eslint-disable no-console */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/control-has-associated-label */
+
 import axios from 'axios';
 import LayoutDashboard from 'components/layout/dashboard';
 import MetaSeo from 'components/MetaSeo';
 import Modal from 'components/Modal';
-// import Paging from 'components/Paging';
 import TitleColor from 'components/TitleColor';
-// import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -68,7 +68,6 @@ const User = () => {
       .then((res) => {
         setIsDelete(false);
         getUser();
-        // console.log('User deleted');
       })
       .catch((err) => {
         console.log(err);
@@ -76,7 +75,7 @@ const User = () => {
   };
   return (
     <>
-      <MetaSeo title="Dashboard" description="Admin User Antrian" />
+      <MetaSeo title="Admin User" description="Admin User Antrian" />
       <LayoutDashboard>
         <div className="flex justify-center items-center m-0 p-0 mb-4">
           <svg
@@ -154,9 +153,7 @@ const User = () => {
                       <th
                         scope="col"
                         className="px-6 py-3 text-center text-sm font-semibold uppercase tracking-wider"
-                      >
-                        {/* <span className="sr-only">Edit</span> */}
-                      </th>
+                      />
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -227,8 +224,6 @@ const User = () => {
                       })}
                   </tbody>
                 </table>
-
-                {/* <Paging /> */}
               </div>
             </div>
           </div>

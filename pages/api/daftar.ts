@@ -21,10 +21,26 @@ const getData = async (req: NextApiRequest, res: NextApiResponse) => {
     if (month.toString().length < 2) {
       monthNow = `0${month.toString()}`;
     }
-    const nowDate = `${year}-${dateNow}-${monthNow}`;
+    const nowDate = `${year}-${monthNow}-${dateNow}`;
     const allData = await prisma.antrian.findMany({
       where: {
         time: nowDate,
+      },
+    });
+    return res.status(200).json(allData);
+  } catch (error) {
+    return res.status(401).json({
+      error: error.message,
+    });
+  }
+};
+
+const getDataDate = async (req: NextApiRequest, res: NextApiResponse) => {
+  try {
+    const { time } = req.body;
+    const allData = await prisma.antrian.findMany({
+      where: {
+        time,
       },
     });
     return res.status(200).json(allData);
@@ -48,7 +64,6 @@ const UpdateData = async (req: NextApiRequest, res: NextApiResponse) => {
       nomor,
       operator,
     } = req.body;
-    // console.log(req.body);
     const dataUpdate = await prisma.antrian.update({
       where: {
         id,
@@ -81,7 +96,7 @@ const antri = (req: NextApiRequest, res: NextApiResponse): any => {
       return getData(req, res);
 
     case 'POST':
-      return res.status(404).json({ message: 'API belum didefinisikan' });
+      return getDataDate(req, res);
 
     case 'PUT':
       return UpdateData(req, res);

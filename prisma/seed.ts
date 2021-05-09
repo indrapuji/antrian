@@ -30,6 +30,11 @@ const aplikasiLogo = {
   values: 'daihatsu.png',
 };
 
+const aplikasiStatus = {
+  keys: 'status',
+  values: 'buka',
+};
+
 async function main() {
   const admin = await prisma.user.upsert({
     where: { username: 'admin' },
@@ -54,12 +59,16 @@ async function main() {
     update: aplikasiLogo,
     create: aplikasiLogo,
   });
-  // console.log({ admin });
+
+  const statusAplikasi = await prisma.setting.upsert({
+    where: { keys: 'status' },
+    update: aplikasiStatus,
+    create: aplikasiStatus,
+  });
 }
 
 main()
   .catch((e) => {
-    // console.error(e);
     process.exit(1);
   })
   .finally(async () => {

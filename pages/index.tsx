@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
+/* eslint-disable react-hooks/exhaustive-deps */
 import axios from 'axios';
 import Footer from 'components/Footer';
 import MetaSeo from 'components/MetaSeo';
@@ -18,6 +19,7 @@ const Home = () => {
   const [listAntrian, setListAntrian] = useState<any>();
   const [listOperator, setListOperator] = useState<any>();
   const [isRow, setIsrow] = useState<any>();
+  const [starusAntrian, setStatusAntrian] = useState(true);
 
   useEffect(() => {
     getData();
@@ -73,7 +75,7 @@ const Home = () => {
           speech.lang = 'id-ID';
           speech.volume = 1;
           speech.rate = 1;
-          speech.pitch = 0;
+          speech.pitch = 1;
           window.speechSynthesis.speak(speech);
           setSay('null');
           // eslint-disable-next-line no-plusplus
@@ -117,6 +119,15 @@ const Home = () => {
         getUser();
       }
     });
+
+    socket.on('status_antrian', (data) => {
+      if (data === 'buka') {
+        setStatusAntrian(true);
+      }
+      if (data === 'tutup') {
+        setStatusAntrian(false);
+      }
+    });
   }, []);
 
   const mergeOperatorAntrian = (op: any, antrian: any) =>
@@ -127,18 +138,23 @@ const Home = () => {
       ...opItem,
     }));
 
+  const socket = io();
+
   const getAntrianPanggil = async () => {
     try {
       const antrianCounter = await axios({
-        method: 'get',
+        method: 'GET',
         url: '/api/daftar',
       });
+      // const totalAntrian = antrianCounter.data.filter(
+      //   (x: any) => x.antrian === 'waiting'
+      // );
+      socket.emit('count', antrianCounter);
       const antri = antrianCounter.data
         .filter((x: any) => x.antrian === 'calling')
         .sort((a: any, b: any) => (a.operator > b.operator ? 1 : -1));
       return antri;
     } catch (error) {
-      // console.log(error);
       return false;
     }
   };
@@ -156,7 +172,6 @@ const Home = () => {
       const antrianPanggil = await getAntrianPanggil();
 
       const merged = mergeOperatorAntrian(filterOperator, antrianPanggil);
-      console.log(merged);
 
       setListOperator(merged);
       if (merged.length < Number(4)) {
@@ -204,129 +219,95 @@ const Home = () => {
               data-marquee={textRunning}
             />
 
-            <div className="grid grid-cols-4 gap-0">
-              <div className="col-span-4 md:col-span-3 p-4 pr-3">
-                <div className={`grid grid-cols-1 md:grid-cols-${isRow} gap-6`}>
-                  {listOperator &&
-                    listOperator.map((item: any) => {
-                      return (
-                        <div key={item.id} className="card rounded-3xl">
-                          <div className="rounded-t-3xl bg-danger p-6 text-white text-center text-shadow-sm">
-                            <div className="text-3xl font-bold">
-                              {item.label}
+            {starusAntrian ? (
+              <div>
+                <div className="grid grid-cols-4 gap-0">
+                  <div className="col-span-4 md:col-span-3 p-4 pr-3">
+                    <div
+                      className={`grid grid-cols-1 md:grid-cols-${isRow} gap-6`}
+                    >
+                      {listOperator &&
+                        listOperator.map((item: any) => {
+                          return (
+                            <div key={item.id} className="card rounded-3xl">
+                              <div className="rounded-t-3xl bg-danger p-6 text-white text-center text-shadow-sm">
+                                <div className="text-3xl font-bold">
+                                  {item.label}
+                                </div>
+                              </div>
+                              <div className="p-6 pb-0 text-center">
+                                <div className="p-0 m-0 text-lg font-bold">
+                                  Nomor Antrian
+                                </div>
+                                <TitleColor
+                                  className="text-9xl font-bold m-0 p-0 ml-1"
+                                  color="bg-dark"
+                                >
+                                  {item.kode !== undefined ? item.kode : '--'}
+                                </TitleColor>
+                                {/* <TitleColor className="text-2xl font-bold m-0 pb-3 ml-1" color="bg-dark">
+                                  {item.nopol !== undefined ? item.nopol : ''}
+                                </TitleColor> */}
+                              </div>
                             </div>
-                          </div>
-                          <div className="p-6 pb-0 text-center">
-                            <div className="p-0 m-0 text-lg font-bold">
-                              Nomor Antrian
-                            </div>
-                            <TitleColor
-                              className="text-9xl font-bold m-0 p-0 ml-1"
-                              color="bg-dark"
-                            >
-                              {item.kode !== undefined ? item.kode : '--'}
-                            </TitleColor>
-                          </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+
+                  <div className="col-span-4 md:col-span-1 p-4 pl-3">
+                    <div className="card rounded-3xl mb-6">
+                      <div className="rounded-t-3xl bg-warning p-6 text-white text-center text-shadow-sm">
+                        <div className="text-3xl font-bold">Selanjutnya</div>
+                      </div>
+                      <div className="p-5">
+                        {listAntrian &&
+                          listAntrian.slice(0, 8).map((item: any) => {
+                            return (
+                              <div className="p-3 text-center text-xl font-bold">
+                                Nomor Antrian {item.kode}
+                              </div>
+                            );
+                          })}
+                        {listAntrian &&
+                          listAntrian.length < 8 &&
+                          [...Array(8 - listAntrian.length)].map((_, i) => {
+                            return (
+                              <div className="p-3 text-center text-xl font-bold">
+                                -
+                              </div>
+                            );
+                          })}
+                        <div className="flex p-3 text-center text-xl font-bold">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            className="h-10 mx-auto text-rose-500"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
                         </div>
-                      );
-                    })}
-                  {/* <div className="card rounded-3xl">
-                    <div className="rounded-t-3xl bg-danger p-6 text-white text-center text-shadow-sm">
-                      <div className="text-3xl font-bold">Operator 1</div>
-                    </div>
-                    <div className="p-6 pb-0 text-center">
-                      <div className="p-0 m-0 text-lg font-bold">Nomor Antrian</div>
-                      <TitleColor className="text-9xl font-bold m-0 p-0 ml-1" color="bg-dark">
-                        17
-                      </TitleColor>
-                    </div>
-                  </div>
-                  <div className="card rounded-3xl">
-                    <div className="rounded-t-3xl bg-danger p-6 text-white text-center text-shadow-sm">
-                      <div className="text-3xl font-bold">Operator 2</div>
-                    </div>
-                    <div className="p-6 text-center">
-                      <div className="p-0 m-0 text-lg font-bold">Nomor Antrian</div>
-                      <TitleColor className="text-9xl font-bold m-0 p-0 ml-1" color="bg-dark">
-                        19
-                      </TitleColor>
-                    </div>
-                  </div>
-                  <div className="card rounded-3xl">
-                    <div className="rounded-t-3xl bg-danger p-6 text-white text-center text-shadow-sm">
-                      <div className="text-3xl font-bold">Operator 3</div>
-                    </div>
-                    <div className="p-6 text-center">
-                      <div className="p-0 m-0 text-lg font-bold">Nomor Antrian</div>
-                      <TitleColor className="text-9xl font-bold m-0 p-0 ml-1" color="bg-dark">
-                        20
-                      </TitleColor>
-                    </div>
-                  </div>
-                  <div className="card rounded-3xl">
-                    <div className="rounded-t-3xl bg-danger p-6 text-white text-center text-shadow-sm">
-                      <div className="text-3xl font-bold">Operator 4</div>
-                    </div>
-                    <div className="p-6 text-center">
-                      <div className="p-0 m-0 text-lg font-bold">Nomor Antrian</div>
-                      <TitleColor className="text-9xl font-bold m-0 p-0 ml-1" color="bg-dark">
-                        21
-                      </TitleColor>
-                    </div>
-                  </div> */}
-                </div>
-              </div>
-              <div className="col-span-4 md:col-span-1 p-4 pl-3">
-                <div className="card rounded-3xl mb-6">
-                  <div className="rounded-t-3xl bg-warning p-6 text-white text-center text-shadow-sm">
-                    <div className="text-3xl font-bold">Selanjutnya</div>
-                  </div>
-                  <div className="p-5">
-                    {listAntrian &&
-                      listAntrian.slice(0, 8).map((item: any) => {
-                        return (
-                          <div className="p-3 text-center text-xl font-bold">
-                            Nomor Antrian {item.kode}
-                          </div>
-                        );
-                      })}
-                    {listAntrian &&
-                      listAntrian.length < 8 &&
-                      [...Array(8 - listAntrian.length)].map((_, i) => {
-                        return (
-                          <div className="p-3 text-center text-xl font-bold">
-                            -
-                          </div>
-                        );
-                      })}
-                    {/* <div className="p-3 text-center text-xl font-bold">Nomor Antrian 22</div>
-                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 23</div>
-                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 24</div>
-                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 25</div>
-                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 26</div>
-                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 27</div>
-                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 28</div>
-                    <div className="p-3 text-center text-xl font-bold">Nomor Antrian 29</div> */}
-                    <div className="flex p-3 text-center text-xl font-bold">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        className="h-10 mx-auto text-rose-500"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-3xl font-bold">
+                    Antrian masih ditutup
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <Footer />

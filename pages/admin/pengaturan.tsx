@@ -15,7 +15,6 @@ import { io } from 'socket.io-client';
 const Dashboard = () => {
   const [isDelete, setIsDelete] = useState(false);
   const [editRunning, setEditRunning] = useState('');
-  // const [editLogo, setEditLogo] = useState('');
   const [EditNama, setEditNama] = useState('');
   const [updateApp, setUpdateApp] = useState('');
   const [token, setToken] = useState('');
@@ -36,10 +35,6 @@ const Dashboard = () => {
           setEditRunning(runningBanner[0].values);
           console.log(runningBanner[0].values);
         }
-        // const aplikasiLogo = res.data.filter((x: any) => x.keys === 'logo');
-        // if (aplikasiLogo.length > 0) {
-        //   setLogoAplikasi(aplikasiLogo[0].values);
-        // }
         const aplikasiNama = res.data.filter((x: any) => x.keys === 'nama');
         if (aplikasiNama.length > 0) {
           setEditNama(aplikasiNama[0].values);

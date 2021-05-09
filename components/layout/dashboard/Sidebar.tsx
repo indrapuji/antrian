@@ -158,11 +158,6 @@ const SidebarMenu = (): JSX.Element => {
                             activeClassName="sidebar-menu-child-i-active"
                           >
                             <a className="sidebar-menu-child-i">
-                              {/* {child.icon !== undefined && (
-                                <span className="sidebar-menu-i-icon">
-                                  <child.icon />
-                                </span>
-                              )} */}
                               <span className="sidebar-menu-i-title">
                                 {child.title}
                               </span>

@@ -107,14 +107,6 @@ const Dashboard = ({ children }: LayoutProps) => {
             isLogo={logoAplikasi}
           />
 
-          {/*
-          <NotificationBar
-            show
-            message="Data berhasil diubah."
-            color="bg-success"
-          />
-          */}
-
           <div
             className="h-full p-4 md:p-6"
             onClick={() => setNavRightMenuUser(false)}

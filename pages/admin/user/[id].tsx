@@ -8,8 +8,6 @@ import LayoutDashboard from 'components/layout/dashboard';
 import MetaSeo from 'components/MetaSeo';
 import TitleColor from 'components/TitleColor';
 import cookieCutter from 'cookie-cutter';
-// import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
@@ -58,7 +56,6 @@ const UbahUser = () => {
       }, 3000);
     } else {
       setWrong(false);
-      console.log(dataUser);
       axios({
         method: 'PUT',
         url: '/api/user',
@@ -66,7 +63,6 @@ const UbahUser = () => {
         headers: { token },
       })
         .then((res) => {
-          console.log(res);
           router.push('/admin/user');
         })
         .catch((err) => {
@@ -81,7 +77,7 @@ const UbahUser = () => {
 
   return (
     <>
-      <MetaSeo title="Dashboard" description="Admin User Antrian" />
+      <MetaSeo title="Edit User" description="Admin User Antrian" />
       <LayoutDashboard>
         <div className="flex justify-center items-center m-0 p-0 mb-4">
           <svg

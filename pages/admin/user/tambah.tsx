@@ -73,7 +73,7 @@ const TambahUser = () => {
   };
   return (
     <>
-      <MetaSeo title="Dashboard" description="Admin User Antrian" />
+      <MetaSeo title="Tambah User" description="Admin User Antrian" />
       <LayoutDashboard>
         <div className="flex justify-center items-center m-0 p-0 mb-4">
           <svg

@@ -53,28 +53,29 @@ const Dashboard = () => {
     setMaxAntrian(data);
   });
 
-  const getData = () => {
-    axios({
-      method: 'GET',
-      url: '/api/aplikasi',
-    })
-      .then((res) => {
-        const runningBanner = res.data.filter((x: any) => x.keys === 'running');
-        if (runningBanner.length > 0) {
-          setTextRunning(runningBanner[0].values);
-        }
-        const aplikasiLogo = res.data.filter((x: any) => x.keys === 'logo');
-        if (aplikasiLogo.length > 0) {
-          setLogoAplikasi(aplikasiLogo[0].values);
-        }
-        const aplikasiNama = res.data.filter((x: any) => x.keys === 'nama');
-        if (aplikasiNama.length > 0) {
-          setNamaAplikasi(aplikasiNama[0].values);
-        }
-      })
-      .catch((err) => {
-        console.log(err);
+  const getData = async () => {
+    try {
+      const aplikasi = await axios({
+        method: 'GET',
+        url: '/api/aplikasi',
       });
+      const aplikasiLogo = aplikasi.data.filter((x: any) => x.keys === 'logo');
+      if (aplikasiLogo.length > 0) {
+        setLogoAplikasi(aplikasiLogo[0].values);
+      }
+      const aplikasiNama = aplikasi.data.filter((x: any) => x.keys === 'nama');
+      if (aplikasiNama.length > 0) {
+        setNamaAplikasi(aplikasiNama[0].values);
+      }
+      const runningBanner = aplikasi.data.filter(
+        (x: any) => x.keys === 'running'
+      );
+      if (runningBanner.length > 0) {
+        setTextRunning(runningBanner[0].values);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const countUser = () => {
@@ -114,20 +115,6 @@ const Dashboard = () => {
           <TitleColor className="text-2xl m-0 p-0 ml-1" color="bg-dark">
             Dashboard
           </TitleColor>
-        </div>
-
-        <div>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              const ngomong = 'Antrian 105.';
-              socket.emit('pengumuman', ngomong);
-            }}
-            className="mb-4"
-            type="button"
-          >
-            Tes ngomong
-          </button>
         </div>
 
         <div className="w-full mb-6">

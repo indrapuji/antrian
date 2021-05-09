@@ -5,7 +5,6 @@
 /* eslint-disable react/no-array-index-key */
 /* eslint-disable @typescript-eslint/no-shadow */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// import { data } from 'autoprefixer';
 import axios from 'axios';
 import Footer from 'components/Footer';
 import MetaSeo from 'components/MetaSeo';
@@ -24,26 +23,26 @@ const Pendaftaran = () => {
   const [namaAplikasi, setNamaAplikasi] = useState('');
   const [logoAplikasi, setLogoAplikasi] = useState('');
   const [panggil, setPanggil] = useState('');
-  // const [mulai, setMulai] = useState<any>();
   const [newId, setNewId] = useState();
   const [current, setCurrent] = useState<any>();
   const [operator, setOperator] = useState('');
-  const [skipAntrian, setSkipAntrian] = useState<any>();
   const [isShow, setIsShow] = useState(false);
   const [skipId, setSkipId] = useState();
+  const [skipAntrian, setSkipAntrian] = useState<any>();
   const [doneAntrian, setDoneAntrian] = useState<any>();
+  const [starusAntrian, setStatusAntrian] = useState(true);
 
   useEffect(() => {
-    // setInterval(() => {
-    updateNow(moment().locale('id'));
-    // }, 1000);
+    setInterval(() => {
+      updateNow(moment().locale('id'));
+    }, 1000);
   }, []);
 
   const socket = io();
   useEffect(() => {
     setOperator(cookieCutter.get('label'));
-    getAntrian();
     setNewId(cookieCutter.get('id'));
+    getData();
     const id = cookieCutter.get('id');
     if (!id) {
       router.push('/login');
@@ -60,13 +59,22 @@ const Pendaftaran = () => {
     socket.on('panggilan', (data) => {
       if (data.operator === Number(id)) {
         setPanggil(data.kode);
-        // console.log(data);
       }
     });
-    getData();
-  }, []);
 
-  const antriData = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+    socket.on('count', (data) => {
+      console.log(data);
+    });
+
+    socket.on('status_antrian', (data) => {
+      if (data === 'buka') {
+        setStatusAntrian(true);
+      }
+      if (data === 'tutup') {
+        setStatusAntrian(false);
+      }
+    });
+  }, []);
 
   const handleLogout = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault();
@@ -77,63 +85,49 @@ const Pendaftaran = () => {
     router.push('/login');
   };
 
-  const getData = () => {
-    axios({
-      method: 'GET',
-      url: '/api/aplikasi',
-    })
-      .then((res) => {
-        const aplikasiLogo = res.data.filter((x: any) => x.keys === 'logo');
-        if (aplikasiLogo.length > 0) {
-          setLogoAplikasi(aplikasiLogo[0].values);
-        }
-        const aplikasiNama = res.data.filter((x: any) => x.keys === 'nama');
-        if (aplikasiNama.length > 0) {
-          setNamaAplikasi(aplikasiNama[0].values);
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  };
-
-  const getAntrian = async () => {
+  const getData = async () => {
     try {
       const id = cookieCutter.get('id');
-      const current = await axios({
+      const aplikasi = await axios({
+        method: 'GET',
+        url: '/api/aplikasi',
+      });
+      const aplikasiLogo = aplikasi.data.filter((x: any) => x.keys === 'logo');
+      if (aplikasiLogo.length > 0) {
+        setLogoAplikasi(aplikasiLogo[0].values);
+      }
+      const aplikasiNama = aplikasi.data.filter((x: any) => x.keys === 'nama');
+      if (aplikasiNama.length > 0) {
+        setNamaAplikasi(aplikasiNama[0].values);
+      }
+      const exData = await axios({
         method: 'GET',
         url: '/api/daftar',
       });
-      const panggilanSekarang = current.data
+      const panggilanSekarang = exData.data
         .filter(
           (x: any) => x.antrian === 'calling' && x.operator === Number(id)
         )
         .sort((a: any, b: any) => (a.nomor > b.nomor ? 1 : -1));
-      if (panggilanSekarang[panggilanSekarang.length - 1].kode !== undefined) {
-        setPanggil(panggilanSekarang[panggilanSekarang.length - 1].kode);
+      if (panggilanSekarang.length > 0) {
+        setPanggil(panggilanSekarang[0].kode);
         setCurrent({
-          ...panggilanSekarang[panggilanSekarang.length - 1],
+          ...panggilanSekarang[0],
           label: cookieCutter.get('label'),
         });
       }
-      const antrianDone = current.data.filter(
+      const antrianDone = exData.data.filter(
         (x: any) => x.antrian === 'done' && x.operator === Number(id)
       );
       setDoneAntrian(antrianDone);
-      const antrianSkip = current.data.filter(
-        (x: any) => x.antrian === 'skip' && x.operator === Number(id)
-      );
+      const antrianSkip = exData.data.filter((x: any) => x.antrian === 'skip');
       setSkipAntrian(antrianSkip);
     } catch (error) {
       console.log(error);
     }
   };
 
-  const handleMulai = async (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
-    e.preventDefault();
-    setCurrent({ label: cookieCutter.get('label') });
+  const handleMulai = async () => {
     try {
       const getNew = await axios({
         method: 'GET',
@@ -173,9 +167,7 @@ const Pendaftaran = () => {
     socket.emit('panggilan', current);
   };
 
-  const handleNext = async (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
+  const handleNext = async () => {
     try {
       const id = cookieCutter.get('id');
       const validate = await axios({
@@ -190,45 +182,53 @@ const Pendaftaran = () => {
       const startAntri = getNew.data
         .filter((x: any) => x.antrian === 'waiting')
         .sort((a: any, b: any) => (a.kode > b.kode ? 1 : -1));
-      const newAntri = await axios({
-        method: 'PUT',
-        url: '/api/daftar',
-        data: {
-          id: startAntri[0].id,
-          operator: Number(newId),
-          antrian: 'calling',
-        },
-      });
-      socket.emit('panggilan', {
-        ...newAntri.data,
-        label: cookieCutter.get('label'),
-      });
-      setCurrent({ ...newAntri.data, label: cookieCutter.get('label') });
-      const getListAntrian = await axios({
-        method: 'get',
-        url: '/api/daftar',
-      });
-      const antri = getListAntrian.data
-        .filter((x: any) => x.antrian === 'waiting')
-        .sort((a: any, b: any) => (a.kode > b.kode ? 1 : -1));
-      socket.emit('pendaftaran', antri);
-      const antrianDone = getListAntrian.data.filter(
+      socket.emit('pendaftaran', startAntri);
+      const antrianDone = getNew.data.filter(
         (x: any) => x.antrian === 'done' && x.operator === Number(id)
       );
       setDoneAntrian(antrianDone);
+      if (startAntri.length > 0) {
+        const newAntri = await axios({
+          method: 'PUT',
+          url: '/api/daftar',
+          data: {
+            id: startAntri[0].id,
+            operator: Number(newId),
+            antrian: 'calling',
+          },
+        });
+        socket.emit('panggilan', {
+          ...newAntri.data,
+          label: cookieCutter.get('label'),
+        });
+        setCurrent({ ...newAntri.data, label: cookieCutter.get('label') });
+        console.log(newAntri.data);
+        const getListAntrian = await axios({
+          method: 'get',
+          url: '/api/daftar',
+        });
+        const antri = getListAntrian.data
+          .filter((x: any) => x.antrian === 'waiting')
+          .sort((a: any, b: any) => (a.kode > b.kode ? 1 : -1));
+        socket.emit('pendaftaran', antri);
+        const antrianDone = getListAntrian.data.filter(
+          (x: any) => x.antrian === 'done' && x.operator === Number(id)
+        );
+        setDoneAntrian(antrianDone);
+      } else {
+        console.log('done all');
+      }
     } catch (error) {
       console.log(error);
     }
   };
 
-  const handleSkip = async (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
+  const handleSkip = async () => {
     try {
       const validate = await axios({
         method: 'PUT',
         url: '/api/daftar',
-        data: { id: current.id, antrian: 'skip' },
+        data: { id: current.id, antrian: 'skip', operator: 0 },
       });
       const getNew = await axios({
         method: 'GET',
@@ -250,6 +250,7 @@ const Pendaftaran = () => {
         ...newAntri.data,
         label: cookieCutter.get('label'),
       });
+      setPanggil(newAntri.data.kode);
       setCurrent({ ...newAntri.data, label: cookieCutter.get('label') });
       const getListAntrian = await axios({
         method: 'get',
@@ -260,9 +261,8 @@ const Pendaftaran = () => {
         .sort((a: any, b: any) => (a.kode > b.kode ? 1 : -1));
       socket.emit('pendaftaran', antri);
       const antrianSkip = getListAntrian.data.filter(
-        (x: any) => x.antrian === 'skip' && x.operator === Number(newId)
+        (x: any) => x.antrian === 'skip'
       );
-      // console.log(antrianSkip);
       setSkipAntrian(antrianSkip);
     } catch (error) {
       console.log(error);
@@ -271,7 +271,40 @@ const Pendaftaran = () => {
 
   const panggilLagi = (idSkip: any) => {
     setSkipId(idSkip);
-    setIsShow(true);
+    if (current !== undefined) {
+      setIsShow(true);
+    } else {
+      handleMulaiSkip(idSkip);
+    }
+  };
+
+  const handleMulaiSkip = async (skipIdMulai: any) => {
+    try {
+      const newAntri = await axios({
+        method: 'PUT',
+        url: '/api/daftar',
+        data: {
+          id: skipIdMulai,
+          operator: Number(newId),
+          antrian: 'calling',
+        },
+      });
+      socket.emit('panggilan', {
+        ...newAntri.data,
+        label: cookieCutter.get('label'),
+      });
+      setCurrent({ ...newAntri.data, label: cookieCutter.get('label') });
+      const getListAntrian = await axios({
+        method: 'get',
+        url: '/api/daftar',
+      });
+      const antrianSkip = getListAntrian.data.filter(
+        (x: any) => x.antrian === 'skip'
+      );
+      setSkipAntrian(antrianSkip);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const currentDone = async () => {
@@ -286,7 +319,7 @@ const Pendaftaran = () => {
       const changeStatus = await axios({
         method: 'PUT',
         url: '/api/daftar',
-        data: { id: skipId, antrian: 'calling' },
+        data: { id: skipId, antrian: 'calling', operator: Number(newId) },
       });
       socket.emit('panggilan', {
         ...changeStatus.data,
@@ -302,46 +335,59 @@ const Pendaftaran = () => {
       );
       setDoneAntrian(antrianDone);
       const antrianSkip = getListDone.data.filter(
-        (x: any) => x.antrian === 'skip' && x.operator === Number(newId)
+        (x: any) => x.antrian === 'skip'
       );
-      // console.log(antrianSkip);
       setSkipAntrian(antrianSkip);
     } catch (error) {
       console.log(error);
     }
   };
 
-  const currentSkip = async () => {
+  const currentSkip = async (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    e.preventDefault();
     try {
       const id = cookieCutter.get('id');
       setIsShow(false);
       const validate = await axios({
         method: 'PUT',
         url: '/api/daftar',
-        data: { id: current.id, antrian: 'skip' },
+        data: { id: current.id, antrian: 'skip', operator: 0 },
       });
       const changeStatus = await axios({
         method: 'PUT',
         url: '/api/daftar',
-        data: { id: skipId, antrian: 'calling' },
+        data: { id: skipId, antrian: 'calling', operator: Number(newId) },
       });
       socket.emit('panggilan', {
         ...changeStatus.data,
         label: cookieCutter.get('label'),
       });
+      setPanggil(changeStatus.data.kode);
       setCurrent({ ...changeStatus.data, label: cookieCutter.get('label') });
       const skip = await axios({
         method: 'GET',
         url: '/api/daftar',
       });
-      const antrianSkip = skip.data.filter(
-        (x: any) => x.antrian === 'skip' && x.operator === Number(id)
-      );
+      const antrianSkip = skip.data.filter((x: any) => x.antrian === 'skip');
       setSkipAntrian(antrianSkip);
     } catch (error) {
       console.log(error);
     }
   };
+
+  // const handleDone = async () => {
+  //   try {
+  //     const validate = await axios({
+  //       method: 'PUT',
+  //       url: '/api/daftar',
+  //       data: { id: current.id, antrian: 'done' },
+  //     });
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   return (
     <>
@@ -393,121 +439,141 @@ const Pendaftaran = () => {
                 {now.format('hh:mm a')}
               </div>
             </div>
-            <div className="justify-center items-center m-6">
-              <TitleColor
-                className="text-2xl m-0 p-0 text-center"
-                color="bg-dark"
-              >
-                Nomor Antrian
-              </TitleColor>
-            </div>
-            <div>
-              <div className="flex items-center justify-center">
-                {!panggil ? (
-                  <div>Anda belum memanggil antrian</div>
-                ) : (
-                  <div className="rounded-lg border shadow-lg p-10">
-                    <div>
-                      <TitleColor
-                        className="text-6xl text-center pb-10"
-                        color="bg-dark"
-                      >
-                        {panggil}
-                      </TitleColor>
-                    </div>
+            {starusAntrian ? (
+              <div>
+                <div className="justify-center items-center m-6">
+                  <TitleColor
+                    className="text-2xl m-0 p-0 text-center"
+                    color="bg-dark"
+                  >
+                    Nomor Antrian
+                  </TitleColor>
+                </div>
+                <div>
+                  <div className="flex items-center justify-center">
+                    {!panggil ? (
+                      <div>Anda belum memanggil antrian</div>
+                    ) : (
+                      <div className="rounded-lg border shadow-lg p-10">
+                        <div>
+                          <TitleColor
+                            className="text-6xl text-center pb-10"
+                            color="bg-dark"
+                          >
+                            {panggil}
+                          </TitleColor>
+                        </div>
 
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                      onClick={handdlePanggilan}
-                    >
-                      Panggil
-                    </button>
+                        <button
+                          type="submit"
+                          className="btn btn-primary"
+                          onClick={() => handdlePanggilan()}
+                        >
+                          Panggil
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
+                  {!panggil ? (
+                    <div className="flex gap-6 mt-10 items-center justify-center">
+                      <button
+                        type="submit"
+                        className="btn btn-success"
+                        onClick={() => handleMulai()}
+                      >
+                        Mulai antrian
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-6 mt-10 items-center justify-center">
+                      <div className="flex gap-6 items-center justify-center">
+                        <button
+                          type="submit"
+                          className="btn btn-success"
+                          onClick={() => handleNext()}
+                        >
+                          Selanjutnya
+                        </button>
+                        <button
+                          type="submit"
+                          className="btn btn-warning"
+                          onClick={() => handleSkip()}
+                        >
+                          lewati
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* <button type="submit" className="btn btn-success" onClick={() => handleDone()}>
+                  Selesai
+                </button> */}
+                </div>
+                <div className="w-full mt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 m-3">
+                    <div className="card rounded-3xl">
+                      <p className="text-center font-bold">
+                        Antrian yang sudah dipanggil
+                      </p>
+                      <div className="flex-auto p-4">
+                        {doneAntrian &&
+                          doneAntrian.map((item: any) => {
+                            return (
+                              <div key={item.id} className="flex flex-wrap">
+                                <div className="relative w-full max-w-full flex-grow flex-1 my-3">
+                                  <p className="text-center font-bold">
+                                    {item.kode}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                    <div className="card rounded-3xl">
+                      <p className="text-center font-bold">
+                        Antrian yang dilewati
+                      </p>
+                      <div className="flex-auto p-4">
+                        {skipAntrian &&
+                          skipAntrian.map((item: any) => {
+                            return (
+                              <div key={item.id} className="flex flex-wrap">
+                                <div className="relative w-full max-w-full flex-grow flex-1 my-3">
+                                  <p className="text-center font-bold">
+                                    {item.kode}
+                                  </p>
+                                </div>
+                                <div className="relative w-full max-w-full flex-grow flex-1 my-3">
+                                  <p className="text-center font-bold">|</p>
+                                </div>
+                                <div className="relative w-full max-w-full flex-grow flex-1 my-3">
+                                  <button
+                                    type="submit"
+                                    className="btn btn-success"
+                                    onClick={() => panggilLagi(item.id)}
+                                  >
+                                    Panggil lagi
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        <p className="text-sm text-orange-500 m-0 mt-2 -mb-2 p-0" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              {!panggil ? (
-                <div className="flex gap-6 mt-10 items-center justify-center">
-                  <button
-                    type="submit"
-                    className="btn btn-success"
-                    onClick={(e) => handleMulai(e)}
-                  >
-                    Mulai antrian
-                  </button>
-                </div>
-              ) : (
-                <div className="flex gap-6 mt-10 items-center justify-center">
-                  <button
-                    type="submit"
-                    className="btn btn-success"
-                    onClick={(e) => handleNext(e)}
-                  >
-                    Selanjutnya
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-warning"
-                    onClick={(e) => handleSkip(e)}
-                  >
-                    lewati
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="w-full mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 m-3">
-                <div className="card rounded-3xl">
-                  <p className="text-center font-bold">
-                    Antrian yang sudah dipanggil
-                  </p>
-                  <div className="flex-auto p-4">
-                    {doneAntrian &&
-                      doneAntrian.map((item: any) => {
-                        return (
-                          <div key={item.id} className="flex flex-wrap">
-                            <div className="relative w-full max-w-full flex-grow flex-1 my-3">
-                              <p className="text-center font-bold">
-                                {item.kode}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-                <div className="card rounded-3xl">
-                  <p className="text-center font-bold">Antrian yang dilewati</p>
-                  <div className="flex-auto p-4">
-                    {skipAntrian &&
-                      skipAntrian.map((item: any) => {
-                        return (
-                          <div key={item.id} className="flex flex-wrap">
-                            <div className="relative w-full max-w-full flex-grow flex-1 my-3">
-                              <p className="text-center font-bold">
-                                {item.kode}
-                              </p>
-                            </div>
-                            <div className="relative w-full max-w-full flex-grow flex-1 my-3">
-                              <p className="text-center font-bold">|</p>
-                            </div>
-                            <div className="relative w-full max-w-full flex-grow flex-1 my-3">
-                              <button
-                                type="submit"
-                                className="btn btn-success"
-                                onClick={() => panggilLagi(item.id)}
-                              >
-                                Panggil lagi
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    <p className="text-sm text-orange-500 m-0 mt-2 -mb-2 p-0" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-3xl font-bold">
+                    Antrian masih ditutup
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           <Footer />
@@ -524,8 +590,8 @@ const Pendaftaran = () => {
         btnProcessShow
         btnProcessTitle="Lewati"
         btnProcessStyle="btn-danger"
-        btnProcessAction={() => {
-          currentSkip();
+        btnProcessAction={(e: any) => {
+          currentSkip(e);
         }}
       />
     </>
