@@ -3,26 +3,26 @@ module.exports = {
     'airbnb-typescript',
     'airbnb/hooks',
     'plugin:@typescript-eslint/recommended',
-    "plugin:import/errors",
-    "plugin:import/warnings",
+    'plugin:import/errors',
+    'plugin:import/warnings',
     // 'plugin:jest/recommended',
     'prettier',
     'prettier/react',
     'prettier/@typescript-eslint',
     'plugin:prettier/recommended',
-    'react-app'
+    'react-app',
   ],
   // plugins: ['react', '@typescript-eslint', 'jest', 'simple-import-sort', 'import', 'prettier'],
   plugins: ['react', '@typescript-eslint', 'simple-import-sort', 'import', 'prettier'],
   settings: {
     'import/resolver': {
-      "typescript": {
-        "alwaysTryTypes": true // always try to resolve types under `<root>@types` directory even it doesn't contain any source code, like `@types/unist`
+      typescript: {
+        alwaysTryTypes: true, // always try to resolve types under `<root>@types` directory even it doesn't contain any source code, like `@types/unist`
       },
-      'babel-module': {}
+      'babel-module': {},
     },
-    "import/parsers": {
-      "@typescript-eslint/parser": [".ts", ".tsx"]
+    'import/parsers': {
+      '@typescript-eslint/parser': ['.ts', '.tsx'],
     },
   },
   env: {
@@ -56,6 +56,7 @@ module.exports = {
     'simple-import-sort/exports': 'error',
     'import/no-unresolved': 'error',
     '@typescript-eslint/no-use-before-define': 'off',
-    '@typescript-eslint/explicit-module-boundary-types': 'off'
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
   },
 };

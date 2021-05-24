@@ -9,6 +9,7 @@ import MetaSeo from 'components/MetaSeo';
 import TitleColor from 'components/TitleColor';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
+import { io } from 'socket.io-client';
 
 const TambahUser = () => {
   const router = useRouter();
@@ -59,7 +60,8 @@ const TambahUser = () => {
         data: formData,
       })
         .then((res) => {
-          console.log(res);
+          const socket = io();
+          socket.emit('operator', res);
           router.push('/admin/user');
         })
         .catch((err) => {

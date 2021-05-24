@@ -24,7 +24,7 @@ const Loader = () => {
             href="mailto:dwi.setiyadi@gmail.com"
             className="text-lightBlue-500 font-semibold"
           >
-            dwi.setiyadi@gmail.com
+            indrapuji@gmail.com
           </a>
         </div>
       </div>

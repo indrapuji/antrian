@@ -17,9 +17,13 @@ const getData = async (req: NextApiRequest, res: NextApiResponse) => {
     let monthNow = '';
     if (date.toString().length < 2) {
       dateNow = `0${date.toString()}`;
+    } else {
+      dateNow = date.toString();
     }
     if (month.toString().length < 2) {
       monthNow = `0${month.toString()}`;
+    } else {
+      monthNow = month.toString();
     }
     const nowDate = `${year}-${monthNow}-${dateNow}`;
     const allData = await prisma.antrian.findMany({
@@ -53,17 +57,8 @@ const getDataDate = async (req: NextApiRequest, res: NextApiResponse) => {
 
 const UpdateData = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
-    const {
-      id,
-      nopol,
-      km,
-      status,
-      member,
-      antrian,
-      kode,
-      nomor,
-      operator,
-    } = req.body;
+    const { id, nopol, km, status, member, antrian, kode, nomor, operator } =
+      req.body;
     const dataUpdate = await prisma.antrian.update({
       where: {
         id,

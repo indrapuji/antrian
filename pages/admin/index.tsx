@@ -17,11 +17,23 @@ const Dashboard = () => {
   const [namaAplikasi, setNamaAplikasi] = useState('');
   const [countOperator, setCountOperator] = useState(0);
   const [maxAntrian, setMaxAntrian] = useState(0);
+  const [starusAntrian, setStatusAntrian] = useState(true);
 
   useEffect(() => {
     getData();
     countUser();
     getList();
+
+    const socket = io();
+
+    socket.on('status_antrian', (data) => {
+      if (data === 'buka') {
+        setStatusAntrian(true);
+      }
+      if (data === 'tutup') {
+        setStatusAntrian(false);
+      }
+    });
   }, []);
 
   const getList = () => {
@@ -31,6 +43,7 @@ const Dashboard = () => {
     })
       .then((res) => {
         if (res.data.length > 0) {
+          console.log(res.data.length);
           setMaxAntrian(res.data.length);
         }
       })
@@ -253,7 +266,7 @@ const Dashboard = () => {
                       Status Antrian
                     </h5>
                     <TitleColor className="text-2xl" color="bg-danger">
-                      {maxAntrian > 0 ? 'Dibuka' : 'Ditutup'}
+                      {starusAntrian ? 'Dibuka' : 'Ditutup'}
                     </TitleColor>
                   </div>
                   <div className="relative w-auto pl-4 flex-initial">

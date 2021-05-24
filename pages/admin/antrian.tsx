@@ -49,9 +49,13 @@ const Antrian = () => {
       let monthNow = '';
       if (date.toString().length < 2) {
         thisDate = `0${date.toString()}`;
+      } else {
+        thisDate = date.toString();
       }
       if (month.toString().length < 2) {
         monthNow = `0${month.toString()}`;
+      } else {
+        monthNow = month.toString();
       }
       const nowDate = `${year}-${monthNow}-${thisDate}`;
       setDateNow(nowDate);
@@ -130,9 +134,13 @@ const Antrian = () => {
     let monthNow = '';
     if (date.toString().length < 2) {
       thisDate = `0${date.toString()}`;
+    } else {
+      thisDate = date.toString();
     }
     if (month.toString().length < 2) {
       monthNow = `0${month.toString()}`;
+    } else {
+      monthNow = month.toString();
     }
     const nowDate = `${year}-${monthNow}-${thisDate}`;
     const data = {

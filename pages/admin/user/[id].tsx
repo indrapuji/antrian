@@ -10,6 +10,7 @@ import TitleColor from 'components/TitleColor';
 import cookieCutter from 'cookie-cutter';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 
 const UbahUser = () => {
   const router = useRouter();
@@ -63,6 +64,8 @@ const UbahUser = () => {
         headers: { token },
       })
         .then((res) => {
+          const socket = io();
+          socket.emit('operator', res);
           router.push('/admin/user');
         })
         .catch((err) => {
